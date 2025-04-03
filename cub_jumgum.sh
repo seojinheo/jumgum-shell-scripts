@@ -444,9 +444,9 @@ else
 	        for HOST_NAME_RES in $HOST_NAME_OTH
 	        do
 	                HA_STATUS=`cubrid hb status | grep priority | grep -w "$HOST_NAME_RES" | awk '{print $6}' | sed 's/.$//'`
-	                if [ $HA_STATUS != 'replica)' ]
+	                if [ $HA_STATUS != 'replica' ]
 	                then
-	                        if [ $HA_STATUS != 'unknown)' ]
+	                        if [ $HA_STATUS != 'unknown' ]
 	                        then
 			                echo "        3-$IMSI_CNT. $DB_NAME"
 	              			cubrid applyinfo -a -r "$HOST_NAME_RES" -L $HA_COPY_DEST ${DB_NAME} | awk '{print "         ", $n}'
