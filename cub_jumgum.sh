@@ -1282,14 +1282,21 @@ done
 }
 
 function fn_dmesg_status(){
-DMESG_ERROR=$(dmesg | grep -i "cub_server" | wc -l)
-if [ "$DMESG_ERROR" -gt 0 ]
+DMESG_ERR=0
+for i in {4..1}
+do
+	D_YEAR=`date -d "$i months ago" +"%G"`
+	D_MON=`date -d "$i months ago" +"%b"`
+	DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
+	DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`	
+done
+if [ "$DMESG_ERR" -gt 0 ]
 then
 	DMESG_STATUS="Critical"
 	DMESG_MSG="Check dmesg logs"
 fi
 echo "--------------------------------------------------------------------"
-echo "     'cub_server' found $DMESG_ERROR times in dmesg.		  " 
+echo "     'cub_server' found $DMESG_ERR times in dmesg.		  " 
 echo "--------------------------------------------------------------------"
 }
 
@@ -1457,210 +1464,210 @@ else
 fi
 if [ "$RESULT_SERVICE_STATUS" != "Normal" ]
 then
-	printf " %-25s %-19s %-15s %-40s\n" "" "MASTER Process" "$RESULT_SERVICE_STATUS" "CUBRID service is not running" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+	printf " %-25s %-19s %-15s %-40s\n" "" "MASTER Process" "$RESULT_DISK_STATUS" "CUBRID service is not running" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_DB_STATUS" != "Normal" ]
+then
+	printf " %-25s %-19s %-15s %-40s\n" "" "DB Process" "$RESULT_DB_STATUS" "$RESULT_DB_MSG"	           >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_BROKER_STATUS" != "Normal" ]
+then
+	printf " %-25s %-19s %-15s %-40s\n" "" "Broker Process" "$RESULT_BROKER_STATUS" "$RESULT_BROKER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_MANAGER_STATUS" != "Normal" ]
+then
+	printf " %-25s %-19s %-15s %-40s\n" "" "Manager Process" "$RESULT_MANAGER_STATUS" "$RESULT_MANAGER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+printf " %-45s" " 3) HA Status"  		         						   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+if [ "$RESULT_HA" = "Normal" ]
+then
+        printf " %-15s \n" "$RESULT_HA"	                                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 else
-	if [ "$RESULT_DB_STATUS" != "Normal" ]
+        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_DB_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "DB Process" "$RESULT_HA_DB_STATUS" "$RESULT_HA_DB_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_APPLY_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Apply Process" "$RESULT_HA_APPLY_STATUS" "$RESULT_HA_APPLY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_COPY_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Copy Process" "$RESULT_HA_COPY_STATUS" "$RESULT_HA_COPY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_FAILCOUNT_STATUS" != "Normal" ]
+then
+	printf " %-25s %-19s %-15s %-40s\n" "" "Fail Count" "$RESULT_HA_FAILCOUNT_STATUS" "$RESULT_HA_FAILCOUNT_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_DELAY_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Delay Page" "$RESULT_HA_DELAY_STATUS" "$RESULT_HA_DELAY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_FAILOVER_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Fail Over" "$RESULT_HA_FAILOVER_STATUS" "$RESULT_HA_FAILOVER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_HOSTS_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "databases.txt" "$RESULT_HA_HOSTS_STATUS" "$RESULT_HA_HOSTS_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_CONST_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Constraint" "$RESULT_HA_CONST_STATUS" "$RESULT_HA_CONST_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_HA_COPYLOG_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Copylog Count" "$RESULT_HA_COPYLOG_STATUS" "$RESULT_COLYLOG_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+printf " %-45s" " 4) Space Status"                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+if [ "$RESULT_SPACE" == "Normal" ]
+then
+        printf " %-15s \n" "$RESULT_SPACE"                                                               >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+if [ "$CUB_VERSION" == 2008 ]
+then
+        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+        if [ "$RESULT_INDEXSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Index Usage" "$RESULT_INDEXSPACE_STATUS" "$RESULT_INDEXSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+        if [ "$RESULT_GENERICSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Generic Usage" "$RESULT_GENERICSPACE_STATUS" "$RESULT_GENERICSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+
+        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+
+elif [ "$CUB_VERSION" -ge 10 ]
+then
+        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+else
+        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+        if [ "$RESULT_INDEXSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Index Usage" "$RESULT_INDEXSPACE_STATUS" "$RESULT_INDEXSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+        if [ "$RESULT_GENERICSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Generic Usage" "$RESULT_GENERICSPACE_STATUS" "$RESULT_GENERICSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+
+
+        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
+        then
+                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+        fi
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+printf " %-45s" " 5) Backup Status"                                              >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+if [ "$RESULT_BACKUP" = "Normal" ]
+then
+        printf " %-15s \n" "$RESULT_BACKUP"                                                                >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+if [ "$RESULT_BACKUP" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Full backup" "$RESULT_FULLBACKUP_STATUS" "$RESULT_FULLBACKUP_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+	if [ "$RESULT_INCREBACKUP_STATUS" != "Normal" ]
 	then
-		printf " %-25s %-19s %-15s %-40s\n" "" "DB Process" "$RESULT_DB_STATUS" "$RESULT_DB_MSG"	           >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+	        printf " %-25s %-19s %-15s %-40s\n" "" "Incre backup" "$RESULT_INCREBACKUP_STATUS" "$RESULT_INCREBACKUP_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 	fi
-	if [ "$RESULT_BROKER_STATUS" != "Normal" ]
-	then
-		printf " %-25s %-19s %-15s %-40s\n" "" "Broker Process" "$RESULT_BROKER_STATUS" "$RESULT_BROKER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_MANAGER_STATUS" != "Normal" ]
-	then
-		printf " %-25s %-19s %-15s %-40s\n" "" "Manager Process" "$RESULT_MANAGER_STATUS" "$RESULT_MANAGER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	printf " %-45s" " 3) HA Status"  		         						   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	if [ "$RESULT_HA" = "Normal" ]
-	then
-	        printf " %-15s \n" "$RESULT_HA"	                                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_DB_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "DB Process" "$RESULT_HA_DB_STATUS" "$RESULT_HA_DB_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_APPLY_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Apply Process" "$RESULT_HA_APPLY_STATUS" "$RESULT_HA_APPLY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_COPY_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Copy Process" "$RESULT_HA_COPY_STATUS" "$RESULT_HA_COPY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_FAILCOUNT_STATUS" != "Normal" ]
-	then
-		printf " %-25s %-19s %-15s %-40s\n" "" "Fail Count" "$RESULT_HA_FAILCOUNT_STATUS" "$RESULT_HA_FAILCOUNT_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_DELAY_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Delay Page" "$RESULT_HA_DELAY_STATUS" "$RESULT_HA_DELAY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_FAILOVER_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Fail Over" "$RESULT_HA_FAILOVER_STATUS" "$RESULT_HA_FAILOVER_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_HOSTS_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "databases.txt" "$RESULT_HA_HOSTS_STATUS" "$RESULT_HA_HOSTS_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_CONST_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Constraint" "$RESULT_HA_CONST_STATUS" "$RESULT_HA_CONST_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_HA_COPYLOG_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Copylog Count" "$RESULT_HA_COPYLOG_STATUS" "$RESULT_COLYLOG_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	printf " %-45s" " 4) Space Status"                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	if [ "$RESULT_SPACE" == "Normal" ]
-	then
-	        printf " %-15s \n" "$RESULT_SPACE"                                                               >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	if [ "$CUB_VERSION" == 2008 ]
-	then
-	        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	        if [ "$RESULT_INDEXSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Index Usage" "$RESULT_INDEXSPACE_STATUS" "$RESULT_INDEXSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	        if [ "$RESULT_GENERICSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Generic Usage" "$RESULT_GENERICSPACE_STATUS" "$RESULT_GENERICSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	
-	        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	
-	elif [ "$CUB_VERSION" -ge 10 ]
-	then
-	        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	else
-	        if [ "$RESULT_DATASPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Data Usage" "$RESULT_DATASPACE_STATUS" "$RESULT_DATASPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	        if [ "$RESULT_INDEXSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Index Usage" "$RESULT_INDEXSPACE_STATUS" "$RESULT_INDEXSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	        if [ "$RESULT_GENERICSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Generic Usage" "$RESULT_GENERICSPACE_STATUS" "$RESULT_GENERICSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	
-	
-	        if [ "$RESULT_TEMPSPACE_STATUS" != "Normal" ]
-	        then
-	                printf " %-25s %-19s %-15s %-40s\n" "" "Temp Usage" "$RESULT_TEMPSPACE_STATUS" "$RESULT_TEMPSPACE_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	        fi
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	printf " %-45s" " 5) Backup Status"                                              >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	if [ "$RESULT_BACKUP" = "Normal" ]
-	then
-	        printf " %-15s \n" "$RESULT_BACKUP"                                                                >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	if [ "$RESULT_BACKUP" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Full backup" "$RESULT_FULLBACKUP_STATUS" "$RESULT_FULLBACKUP_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-		if [ "$RESULT_INCREBACKUP_STATUS" != "Normal" ]
-		then
-		        printf " %-25s %-19s %-15s %-40s\n" "" "Incre backup" "$RESULT_INCREBACKUP_STATUS" "$RESULT_INCREBACKUP_MSG"       >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-		fi
-	fi
-	
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	printf " %-45s" " 6) Broker Status"				     					   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	if [ "$RESULT_BROKER" = "Normal" ]
-	then
-	        printf " %-15s \n" "$RESULT_BROKER"                                                                >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_BROKER_DELAY_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Delay" "$RESULT_BROKER_DELAY_STATUS" "$RESULT_BROKER_DELAY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_BROKER_LONGQUERY_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Long Query" "$RESULT_BROKER_LONGQUERY_STATUS" "$RESULT_BROKER_LONGQUERY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	if [ "$RESULT_SERVER_ERROR" = "Normal" ]
-	then
-	printf " %-45s %-15s \n" " 7) Server Error" $RESULT_SERVER_ERROR                                 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf " %-45s %-15s %-40s \n" " 7) Server Error" "$RESULT_SERVER_ERROR" "$RESULT_SERVER_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	if [ "$RESULT_RESTART" = "Normal" ]
-	then
-	printf " %-45s %-15s \n" " 8) Frequent Restarts" $RESULT_RESTART                                 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf " %-45s %-15s %-40s \n" " 7) Frequent Restarts" "$RESULT_RESTART" "$RESULT_RESTART_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	if [ "$DMESG_STATUS" = "Normal" ]
-	then
-	printf " %-45s %-15s \n" " 9) dmesg Error Check" $DMESG_STATUS		                         >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf " %-45s %-15s %-40s \n" " 9) Dmesg" "$DMESG_STATUS" "$DMESG_MSG"			 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	
-	#-------------------------------------------------------------------------------------------------------------------------------------------------------
-	printf " %-45s" "10) Archive Log" 			  					   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	if [ "$RESULT_ARCHIVELOG" = "Normal" ]
-	then
-	        printf " %-15s \n" "$RESULT_ARCHIVELOG"                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	else
-	        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
-	if [ "$RESULT_ARCHIVE_STATUS" != "Normal" ]
-	then
-	        printf " %-25s %-19s %-15s %-40s\n" "" "Archive log count" "$RESULT_ARCHIVE_STATUS" "$RESULT_ARCHIVE_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
-	fi
+fi
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+printf " %-45s" " 6) Broker Status"				     					   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+if [ "$RESULT_BROKER" = "Normal" ]
+then
+        printf " %-15s \n" "$RESULT_BROKER"                                                                >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_BROKER_DELAY_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Delay" "$RESULT_BROKER_DELAY_STATUS" "$RESULT_BROKER_DELAY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_BROKER_LONGQUERY_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Long Query" "$RESULT_BROKER_LONGQUERY_STATUS" "$RESULT_BROKER_LONGQUERY_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+if [ "$RESULT_SERVER_ERROR" = "Normal" ]
+then
+printf " %-45s %-15s \n" " 7) Server Error" $RESULT_SERVER_ERROR                                 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf " %-45s %-15s %-40s \n" " 7) Server Error" "$RESULT_SERVER_ERROR" "$RESULT_SERVER_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+if [ "$RESULT_RESTART" = "Normal" ]
+then
+printf " %-45s %-15s \n" " 8) Frequent Restarts" $RESULT_RESTART                                 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf " %-45s %-15s %-40s \n" " 7) Frequent Restarts" "$RESULT_RESTART" "$RESULT_RESTART_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+if [ "$DMESG_STATUS" = "Normal" ]
+then
+printf " %-45s %-15s \n" " 9) dmesg Error Check" $DMESG_STATUS		                         >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf " %-45s %-15s %-40s \n" " 9) Dmesg" "$DMESG_STATUS" "$DMESG_MSG"			 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+printf " %-45s" "10) Archive Log" 			  					   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+if [ "$RESULT_ARCHIVELOG" = "Normal" ]
+then
+        printf " %-15s \n" "$RESULT_ARCHIVELOG"                                                   >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+else
+        printf "\n"                                                                                        >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+fi
+if [ "$RESULT_ARCHIVE_STATUS" != "Normal" ]
+then
+        printf " %-25s %-19s %-15s %-40s\n" "" "Archive log count" "$RESULT_ARCHIVE_STATUS" "$RESULT_ARCHIVE_MSG" >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 fi
 
 
 # final print
 cat $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+
 
