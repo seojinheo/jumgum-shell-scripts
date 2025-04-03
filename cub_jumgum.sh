@@ -1664,5 +1664,3 @@ fi
 # final print
 cat $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 
-
-echo "abc"
