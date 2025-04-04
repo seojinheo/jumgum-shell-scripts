@@ -103,7 +103,7 @@ JUMGUM_LOG="$JUMGUM_RESULT/cubrid_jumgum"
 # BACKUP Setting
 # Fullbackup = 0, Increbackup = 1
 # backup schedule ex)1day=1, 1month=31
-BACKUP_MODE="0" 
+BACKUP_MODE="1" 
 FULL_BACKUP_SCHEDULE="1"
 INCRE_BACKUP_SCHEDULE="1"
 
@@ -1283,13 +1283,56 @@ done
 
 function fn_dmesg_status(){
 DMESG_ERR=0
-for i in {3..0}
-do
-        D_YEAR=`date -d "$i months ago" +"%G"`
-        D_MON=`date -d "$i months ago" +"%b"`
-        DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
-        DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`
-done
+OS_CHK=0
+OS_ID=`grep "^ID" /etc/os-release | cut -d= -f2 | tr -d '"'`
+OS_VERSION=`grep "^VERSION_ID" /etc/os-release | cut -d= -f2 | tr -d '"' | sed 's/[^0-9.]//g'`
+
+case "$OS_ID" in
+        centos|rhel)
+                if [ "$(echo "$OS_VERSION >= 7" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        ubuntu)
+                if [ "$(echo "$OS_VERSION >= 13.04" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        debian)
+                if [ "$(echo "$OS_VERSION >= 8" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        fedora)
+                if [ "$(echo "$OS_VERSION >= 17" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        *)
+                OS_CHK=0
+                ;;
+esac
+
+if [ "$OS_CHK" -eq 1 ]
+then
+        for i in {3..0}
+        do
+                D_YEAR=`date -d "$i months ago" +"%G"`
+                D_MON=`date -d "$i months ago" +"%b"`
+                DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
+                DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`
+                DMESG_CNT_TEST=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'`
+                echo "$DMESG_CNT_TEST " >> cnt.txt
+        done
+
+else
+        DMESG_ERROR=`dmesg | grep -i "cub_server" | wc -l`
+fi
+
 if [ "$DMESG_ERR" -gt 0 ]
 then
         DMESG_STATUS="Critical"
@@ -1299,6 +1342,7 @@ echo "--------------------------------------------------------------------"
 echo "     'cub_server' found $DMESG_ERR times in dmesg.                  "
 echo "--------------------------------------------------------------------"
 }
+
 
 function fn_archivelog_count(){
 IMSI_CNT=1
