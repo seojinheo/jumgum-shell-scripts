@@ -50,7 +50,6 @@ INCRE_BACKUP_SCHEDULE="1"
 # last check ex) 2025-02-26
 SERVER_ERROR_CONFIRM_DAY=""
 
-
 IMSI_CNT=1
 
 TODAY=`date +'%Y%m%d'`
@@ -107,6 +106,16 @@ CUB_VERSION=`cubrid_rel |awk '{print $2}' | grep -v '^$' | awk -F '.' '{print $1
 JUMGUM_RESULT=`echo ~`
 JUMGUM_LOG="$JUMGUM_RESULT/cubrid_jumgum"
 
+# BACKUP Setting
+# Fullbackup = 0, Increbackup = 1
+# backup schedule ex)1day=1, 1month=31
+BACKUP_MODE="1"
+FULL_BACKUP_SCHEDULE="1"
+INCRE_BACKUP_SCHEDULE="1"
+
+# SERVER ERROR CHECK DAY
+# last check ex) 2025-02-26
+SERVER_ERROR_CONFIRM_DAY=""
 
 
 mkdir -p $JUMGUM_LOG
@@ -1339,6 +1348,7 @@ echo "--------------------------------------------------------------------"
 echo "     'cub_server' found $DMESG_ERR times in dmesg.                  "
 echo "--------------------------------------------------------------------"
 }
+
 
 function fn_archivelog_count(){
 IMSI_CNT=1
