@@ -8,12 +8,7 @@
 # 2.0 : 2020.03.26 - Modifications and bug fixes
 # 2.1 : 2020.06.02 - Feature modifications
 # 2.2 : 2025.02.10 - Modifications and bug fixes
-# 3.0 : 2025.03.26 - Added features and fixed bugs
-
-
-exec 3> debug.log
-BASH_XTRACEFD=3
-set -x
+# 3.0 : 2025.04.10 - Added features and fixed bugs
 
 # version check-------------------------------------------------------------------------
 RD_INPUT=$1
@@ -22,7 +17,7 @@ function fn_shell_version(){
       continue
    elif [ $RD_INPUT = "-v" ] 2>/dev/null; then
       echo
-      echo "CUBRID Jumgum Script v3.0 (64bit release build for linux_gnu) (Feb 10 2025)"
+      echo "CUBRID Jumgum Script v3.0 (64bit release build for linux_gnu) (Apr 10 2025)"
       echo
       exit
    elif [ $RD_INPUT = "start" ] 2>/dev/null; then
@@ -44,6 +39,18 @@ function fn_shell_version(){
 fn_shell_version
 
 # Variable------------------------------------------------------------------------------
+# BACKUP Setting
+# Fullbackup = 0, Increbackup = 1
+# backup schedule ex)1day=1, 1month=31
+BACKUP_MODE="0"
+FULL_BACKUP_SCHEDULE="1"
+INCRE_BACKUP_SCHEDULE="1"
+
+# SERVER ERROR CHECK DAY
+# last check ex) 2025-02-26
+SERVER_ERROR_CONFIRM_DAY=""
+
+
 IMSI_CNT=1
 
 TODAY=`date +'%Y%m%d'`
@@ -100,16 +107,6 @@ CUB_VERSION=`cubrid_rel |awk '{print $2}' | grep -v '^$' | awk -F '.' '{print $1
 JUMGUM_RESULT=`echo ~`
 JUMGUM_LOG="$JUMGUM_RESULT/cubrid_jumgum"
 
-# BACKUP Setting
-# Fullbackup = 0, Increbackup = 1
-# backup schedule ex)1day=1, 1month=31
-BACKUP_MODE="0" 
-FULL_BACKUP_SCHEDULE="1"
-INCRE_BACKUP_SCHEDULE="1"
-
-# SERVER ERROR CHECK DAY
-# last check ex) 2025-02-26
-SERVER_ERROR_CONFIRM_DAY=""
 
 
 mkdir -p $JUMGUM_LOG
@@ -1283,13 +1280,56 @@ done
 
 function fn_dmesg_status(){
 DMESG_ERR=0
-for i in {3..0}
-do
-        D_YEAR=`date -d "$i months ago" +"%G"`
-        D_MON=`date -d "$i months ago" +"%b"`
-        DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
-        DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`
-done
+OS_CHK=0
+OS_ID=`grep "^ID" /etc/os-release | cut -d= -f2 | tr -d '"'`
+OS_VERSION=`grep "^VERSION_ID" /etc/os-release | cut -d= -f2 | tr -d '"' | sed 's/[^0-9.]//g'`
+
+case "$OS_ID" in
+        centos|rhel)
+                if [ "$(echo "$OS_VERSION >= 7" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        ubuntu)
+                if [ "$(echo "$OS_VERSION >= 13.04" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        debian)
+                if [ "$(echo "$OS_VERSION >= 8" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        fedora)
+                if [ "$(echo "$OS_VERSION >= 17" | bc)" -eq 1 ]
+                then
+                        OS_CHK=1
+                fi
+                ;;
+        *)
+                OS_CHK=0
+                ;;
+esac
+
+if [ "$OS_CHK" -eq 1 ]
+then
+        for i in {3..0}
+        do
+                D_YEAR=`date -d "$i months ago" +"%G"`
+                D_MON=`date -d "$i months ago" +"%b"`
+                DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
+                DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`
+                DMESG_CNT_TEST=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'`
+                echo "$DMESG_CNT_TEST " >> cnt.txt
+        done
+
+else
+        DMESG_ERROR=`dmesg | grep -i "cub_server" | wc -l`
+fi
+
 if [ "$DMESG_ERR" -gt 0 ]
 then
         DMESG_STATUS="Critical"
