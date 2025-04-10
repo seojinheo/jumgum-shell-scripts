@@ -1693,7 +1693,7 @@ else
 	then
 	printf " %-45s %-15s \n" " 8) Frequent Restarts" $RESULT_RESTART                                 >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 	else
-	        printf " %-45s %-15s %-40s \n" " 7) Frequent Restarts" "$RESULT_RESTART" "$RESULT_RESTART_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
+	        printf " %-45s %-15s %-40s \n" " 8) Frequent Restarts" "$RESULT_RESTART" "$RESULT_RESTART_MSG"      >> $JUMGUM_RESULT/cubrid_jumgum_summary.txt
 	fi
 	
 	#-------------------------------------------------------------------------------------------------------------------------------------------------------
