@@ -10,10 +10,6 @@
 # 2.2 : 2025.02.10 - Modifications and bug fixes
 # 3.0 : 2025.04.10 - Added features and fixed bugs
 
-exec 3> debug.log
-BASH_XTRACEFD=3
-set -x
-
 # version check-------------------------------------------------------------------------
 RD_INPUT=$1
 function fn_shell_version(){
