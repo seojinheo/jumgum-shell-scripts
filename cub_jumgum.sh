@@ -10,6 +10,10 @@
 # 2.2 : 2025.02.10 - Modifications and bug fixes
 # 3.0 : 2025.04.10 - Added features and fixed bugs
 
+exec 3> debug.log
+BASH_XTRACEFD=3
+set -x
+
 # version check-------------------------------------------------------------------------
 RD_INPUT=$1
 function fn_shell_version(){
@@ -100,6 +104,8 @@ RESULT_BROKER_LONGQUERY_STATUS="Normal"
 
 RESULT_SERVERERROR_STATUS="Normal"
 RESULT_ARCHIVE_STATUS="Normal"
+
+DMESG_STATUS="Normal"
 
 CUB_VERSION=`cubrid_rel |awk '{print $2}' | grep -v '^$' | awk -F '.' '{print $1}'`
 
@@ -194,7 +200,7 @@ TOTAL_MEM=$(free -m | awk 'NR==2 {print $2}')    # 총 메모리 (MB)
 if free | grep -q "available"
 then
 	# CentOS 7 이상
-	AVAILABLE_MEM=$(free -m | awk 'NR==2 {print $(NF-2)}')
+	AVAILABLE_MEM=$(free -m | awk 'NR==2 {print $(NF)}')
 else
 	# CentOS 6 (buffers/cache 활용)
 	AVAILABLE_MEM=$(free -m | awk 'NR==3{print $NF}')
@@ -1332,7 +1338,6 @@ then
                 DMESG_CNT=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'| wc -l`
                 DMESG_ERR=`expr $DMESG_ERR + $DMESG_CNT`
                 DMESG_CNT_TEST=`dmesg -T | grep -i "cub_server" | awk -v mon="$D_MON" -v year="$D_YEAR]" '$2 == mon && $5 == year { print }'`
-                echo "$DMESG_CNT_TEST " >> cnt.txt
         done
 
 else
