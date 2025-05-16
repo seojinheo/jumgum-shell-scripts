@@ -108,17 +108,6 @@ CUB_VERSION=`cubrid_rel |awk '{print $2}' | grep -v '^$' | awk -F '.' '{print $1
 JUMGUM_RESULT=`echo ~`
 JUMGUM_LOG="$JUMGUM_RESULT/cubrid_jumgum"
 
-# BACKUP Setting
-# Fullbackup = 0, Increbackup = 1
-# backup schedule ex)1day=1, 1month=31
-BACKUP_MODE="1"
-FULL_BACKUP_SCHEDULE="1"
-INCRE_BACKUP_SCHEDULE="1"
-
-# SERVER ERROR CHECK DAY
-# last check ex) 2025-02-26
-SERVER_ERROR_CONFIRM_DAY=""
-
 
 mkdir -p $JUMGUM_LOG
 mkdir -p $JUMGUM_RESULT
@@ -1209,28 +1198,36 @@ do
         echo "     $IMSI_CNT. $DB_NAME"
         echo "--------------------------------------------------------------------"
 	LATEST_ERR_FILE=$(ls -t $CUBRID/log/server | grep "$DB_NAME" | grep ".err" | head -n1)
-        if [ -n "$LATEST_ERR_FILE" ]
-        then
-                LOG_PATH="$CUBRID/log/server/$LATEST_ERR_FILE"
-                ERROR_CONFIRM=$(awk -v confirm_day="$SERVER_ERROR_CONFIRM_DAY_FMT" '
-                {
-                        if ($0 ~ /[0-9]{2}\/[0-9]{2}\/[0-9]{2}/) {
-                        date_str = substr($0, match($0, /[0-9]{2}\/[0-9]{2}\/[0-9]{2}/), 8);
-                        split(date_str, parts, "/");
-                        log_date = "20" parts[3] "-" parts[1] "-" parts[2];
-                        cmd = "date -d \"" log_date "\" +\"%Y%m%d\" 2>/dev/null";
-                        cmd | getline log_date_fmt;
-                        close(cmd);
-                        if (log_date_fmt != "" && (confirm_day == "" || log_date_fmt > confirm_day)) {
-                            print $0;
-                                }
-                        }
-                }' "$LOG_PATH" | \
-                grep -E "ERROR CODE = -([0-9]+)" | \
-                grep -E "ERROR CODE = -(2|13|14|17|19|21|22|23|34|35|38|39|40|41|43|46|48|49|50|51|52|54|55|56|59|60|61|62|63|67|68|69|70|71|77|78|79|81|85|88|96|97|120|177|210|263|313|407|504|518|544|545|546|551|563|572|573|574|584|586|588|603|604|605|625|626|644|668|678|689|698|699|700|702|703|725|734|757|760|761|762|763|764|766|780|976|1105|1119|1120|1131)\b" | \
-                sed -nE 's/.*ERROR CODE = (-[0-9]+).*/\1/p' | \
-                sort | uniq -c)
-        fi
+	if [ -n "$LATEST_ERR_FILE" ]
+	then
+		LOG_PATH="$CUBRID/log/server/$LATEST_ERR_FILE"
+	    
+		if [ -n "$SERVER_ERROR_CONFIRM_DAY_FMT" ]
+		then
+	   	     ERROR_CONFIRM=$(awk -v confirm_day="$SERVER_ERROR_CONFIRM_DAY_FMT" '
+	   	     {
+	   	         if ($0 ~ /[0-9]{2}\/[0-9]{2}\/[0-9]{2}/) {
+	   	             date_str = substr($0, match($0, /[0-9]{2}\/[0-9]{2}\/[0-9]{2}/), 8);
+	   	             split(date_str, parts, "/");
+	   	             log_date = "20" parts[3] "-" parts[1] "-" parts[2];
+	   	             cmd = "date -d \"" log_date "\" +\"%Y%m%d\" 2>/dev/null";
+	   	             cmd | getline log_date_fmt;
+	   	             close(cmd);
+	   	             if (log_date_fmt != "" && log_date_fmt > confirm_day) {
+	   	                 print $0;
+	   	             }
+	   	         }
+	   	     }' "$LOG_PATH")
+		else
+	        	ERROR_CONFIRM=$(cat "$LOG_PATH")
+		fi
+	
+		ERROR_CONFIRM=$(echo "$ERROR_CONFIRM" | \
+	        grep -E "ERROR CODE = -([0-9]+)" | \
+	        grep -E "ERROR CODE = -(2|13|14|17|19|21|22|23|34|35|38|39|40|41|43|46|48|49|50|51|52|54|55|56|59|60|61|62|63|67|68|69|70|71|77|78|79|81|85|88|96|97|120|177|210|263|313|407|504|518|544|545|546|551|563|572|573|574|584|586|588|603|604|605|625|626|644|668|678|689|698|699|700|702|703|725|734|757|760|761|762|763|764|766|780|976|1105|1119|1120|1131)\b" | \
+	        sed -nE 's/.*ERROR CODE = (-[0-9]+).*/\1/p' | \
+	        sort | uniq -c)
+	fi
 	if [ -n "$ERROR_CONFIRM" ]
         then
 		echo "$ERROR_CONFIRM" | awk '{printf "          * Count: %-6s |     * Error code: %s\n", $1, $2}'
